@@ -1,25 +1,22 @@
 import asyncio
-import logging
-from loguru import logger
 from aiogram import Bot, Dispatcher
-from aiogram.enums import ParseMode
-from aiogram.client.default import DefaultBotProperties
+from loguru import logger
 
 from config.settings import settings
+from app.handlers import user
 
 
 async def main():
-    logging.basicConfig(level=logging.INFO)
     logger.info("Starting bot...")
-
-    bot = Bot(
-        token=settings.bot_token,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-    )
-
+    
+    bot = Bot(token=settings.bot_token)
     dp = Dispatcher()
-
+    
+    # Подключаем роутеры
+    dp.include_router(user.router)
+    
     logger.info(f"Bot {settings.bot_name} started!")
+    
     await dp.start_polling(bot)
 
 
