@@ -1,21 +1,30 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum
-from app.database.base import Base, TimestampMixin
+from sqlalchemy import Integer, Text, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING
 import enum
 
+from app.database.base import Base, TimestampMixin
 
-class OrderStatus(enum.Enum):
+if TYPE_CHECKING:
+    from app.models.client import Client
+
+
+class OrderStatus(str, enum.Enum):
     new = "new"
     in_progress = "in_progress"
-    completed = "completed"
+    done = "done"
     cancelled = "cancelled"
 
 
 class Order(Base, TimestampMixin):
     __tablename__ = "orders"
 
-    id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
-    bot_id = Column(Integer, ForeignKey("bots.id"), nullable=False)
-    status = Column(Enum(OrderStatus), default=OrderStatus.new)
-    description = Column(Text, nullable=True)
-    contact_phone = Column(String, nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    client_id: Mapped[int] = mapped_column(Integer, ForeignKey("clients.id"), nullable=False)
+    bot_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[OrderStatus] = mapped_column(
+        default=OrderStatus.new, nullable=False
+    )
+
+    client: Mapped["Client"] = relationship("Client", back_populates="orders")

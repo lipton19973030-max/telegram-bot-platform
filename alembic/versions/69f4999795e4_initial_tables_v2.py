@@ -1,8 +1,8 @@
-"""initial tables
+"""initial tables v2
 
-Revision ID: 3b9e3679267b
+Revision ID: 69f4999795e4
 Revises: 
-Create Date: 2026-06-28 11:20:42.363145
+Create Date: 2026-06-28 12:40:41.982374
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '3b9e3679267b'
+revision: str = '69f4999795e4'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -50,10 +50,9 @@ def upgrade() -> None:
     op.create_table('orders',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('client_id', sa.Integer(), nullable=False),
-    sa.Column('bot_id', sa.Integer(), nullable=False),
-    sa.Column('status', sa.Enum('new', 'in_progress', 'completed', 'cancelled', name='orderstatus'), nullable=True),
-    sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('contact_phone', sa.String(), nullable=True),
+    sa.Column('bot_id', sa.Integer(), nullable=True),
+    sa.Column('description', sa.Text(), nullable=False),
+    sa.Column('status', sa.Enum('new', 'in_progress', 'done', 'cancelled', name='orderstatus'), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['bot_id'], ['bots.id'], ),
