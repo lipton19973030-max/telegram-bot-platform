@@ -25,11 +25,10 @@ class OrderService:
             first_name=first_name,
             last_name=last_name,
         )
-
         order = await self.order_repo.create(
             client_id=client.id,
             description=description,
-         status=OrderStatus.new,
+            status=OrderStatus.new,
         )
         return order
 

@@ -5,7 +5,6 @@ from aiogram.fsm.context import FSMContext
 from app.states.order_states import OrderStates
 from app.keyboards.order_kb import service_keyboard, confirm_keyboard, remove_keyboard
 from app.services.order_service import OrderService
-from app.repositories.client import ClientRepository
 
 router = Router()
 
@@ -40,8 +39,7 @@ async def service_chosen(message: Message, state: FSMContext):
 async def description_entered(message: Message, state: FSMContext):
     data = await state.get_data()
     service = data.get("service")
-    description = f"{service}: {message.text}"
-    await state.update_data(description=description)
+    await state.update_data(description=message.text)
     await state.set_state(OrderStates.confirming)
     await message.answer(
         f"Проверьте заявку:\n\n"
@@ -55,23 +53,20 @@ async def description_entered(message: Message, state: FSMContext):
 @router.message(OrderStates.confirming, F.text == "✅ Подтвердить")
 async def order_confirmed(message: Message, state: FSMContext, db_session):
     data = await state.get_data()
-    client_repo = ClientRepository(db_session)
-    client = await client_repo.get_or_create(
+    order_service = OrderService(db_session)
+    order = await order_service.create_order(
         telegram_id=message.from_user.id,
         username=message.from_user.username,
         first_name=message.from_user.first_name,
         last_name=message.from_user.last_name,
-    )
-    order_service = OrderService(db_session)
-    order = await order_service.create_order(
-        client_id=client.id,
         description=data.get("description"),
     )
     await state.clear()
     await message.answer(
-        f"✅ Заявка #{order.id} создана!\n"
-        f"Описание: {data.get('description')}\n"
-        f"Статус: {order.status.value}",
+        f"✅ Заявка #{order.id} принята!\n"
+        f"Услуга: {data.get('service')}\n"
+        f"Описание: {data.get('description')}\n\n"
+        f"Мы свяжемся с вами в ближайшее время.",
         reply_markup=remove_keyboard()
     )
 
