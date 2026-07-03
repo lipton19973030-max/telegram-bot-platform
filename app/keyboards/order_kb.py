@@ -1,29 +1,33 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
+SERVICES = [
+    "🔧 Сантехника", "⚡ Электрика", "🚪 Двери/замки", "👷 Разнорабочие",
+    "📦 Грузчики", "🚚 Грузоперевозки", "🛋 Сборка мебели", "❄️ Сплит-системы",
+    "🔨 Ремонт техники", "🗑 Вывоз мусора", "⛏ Демонтаж", "🌿 Покос травы",
+    "🏠 Другое",
+]
+
 
 def service_keyboard() -> ReplyKeyboardMarkup:
+    buttons = [[KeyboardButton(text=s)] for s in SERVICES]
+    buttons.append([KeyboardButton(text="❌ Отмена")])
+    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
+
+
+def description_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="🔧 Сантехника"), KeyboardButton(text="⚡ Электрика")],
-            [KeyboardButton(text="🚪 Двери/замки"), KeyboardButton(text="👷 Разнорабочие")],
-            [KeyboardButton(text="📦 Грузчики"), KeyboardButton(text="🚚 Грузоперевозки")],
-            [KeyboardButton(text="🛋 Сборка мебели"), KeyboardButton(text="❄️ Сплит-системы")],
-            [KeyboardButton(text="🔨 Ремонт техники"), KeyboardButton(text="🗑 Вывоз мусора")],
-            [KeyboardButton(text="⛏ Демонтаж"), KeyboardButton(text="🌿 Покос травы")],
-            [KeyboardButton(text="🏠 Другое")],
-        ],
-        resize_keyboard=True,
-        one_time_keyboard=True,
+        keyboard=[[KeyboardButton(text="❌ Отмена")]],
+        resize_keyboard=True
     )
 
 
 def confirm_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="✅ Подтвердить"), KeyboardButton(text="❌ Отменить")],
+            [KeyboardButton(text="✅ Подтвердить")],
+            [KeyboardButton(text="❌ Отмена")],
         ],
-        resize_keyboard=True,
-        one_time_keyboard=True,
+        resize_keyboard=True
     )
 
 

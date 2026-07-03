@@ -1,17 +1,29 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
+from aiogram.filters import Command
 
 from app.states.order_states import OrderStates
 from app.keyboards.order_kb import service_keyboard, confirm_keyboard, remove_keyboard
+from app.keyboards.user_kb import main_menu_keyboard
 from app.services.order_service import OrderService
+from app.services.notification_service import NotificationService
 
 router = Router()
 
 SERVICES = [
-    "🔧 Сантехника", "⚡ Электрика", "🚪 Двери/замки", "👷 Разнорабочие",
-    "📦 Грузчики", "🚚 Грузоперевозки", "🛋 Сборка мебели", "❄️ Сплит-системы",
-    "🔨 Ремонт техники", "🗑 Вывоз мусора", "⛏ Демонтаж", "🌿 Покос травы",
+    "🔧 Сантехника",
+    "⚡ Электрика",
+    "🚪 Двери/замки",
+    "👷 Разнорабочие",
+    "📦 Грузчики",
+    "🚚 Грузоперевозки",
+    "🛋 Сборка мебели",
+    "❄️ Сплит-системы",
+    "🔨 Ремонт техники",
+    "🗑 Вывоз мусора",
+    "⛏ Демонтаж",
+    "🌿 Покос травы",
     "🏠 Другое",
 ]
 
@@ -22,6 +34,18 @@ async def cmd_neworder(message: Message, state: FSMContext):
     await message.answer(
         "Выберите тип услуги:",
         reply_markup=service_keyboard()
+    )
+
+
+@router.message(OrderStates.choosing_service, F.text == "❌ Отмена")
+@router.message(OrderStates.entering_description, F.text == "❌ Отмена")
+@router.message(OrderStates.confirming, F.text == "❌ Отменить")
+async def cancel_order(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer(
+        f"Привет, {message.from_user.first_name}! 🙌\n\n"
+        "Я ваш помощник в этом боте, помогу вам оставить заявку на услугу.",
+        reply_markup=main_menu_keyboard()
     )
 
 
@@ -51,8 +75,9 @@ async def description_entered(message: Message, state: FSMContext):
 
 
 @router.message(OrderStates.confirming, F.text == "✅ Подтвердить")
-async def order_confirmed(message: Message, state: FSMContext, db_session):
+async def order_confirmed(message: Message, state: FSMContext, db_session, bot: Bot):
     data = await state.get_data()
+
     order_service = OrderService(db_session)
     order = await order_service.create_order(
         telegram_id=message.from_user.id,
@@ -61,20 +86,22 @@ async def order_confirmed(message: Message, state: FSMContext, db_session):
         last_name=message.from_user.last_name,
         description=data.get("description"),
     )
+
+    notification_service = NotificationService(bot)
+    await notification_service.notify_admins_new_order(
+        order_id=order.id,
+        service=data.get("service"),
+        description=data.get("description"),
+        client_name=message.from_user.full_name,
+        client_username=message.from_user.username,
+        telegram_id=message.from_user.id,
+    )
+
     await state.clear()
     await message.answer(
         f"✅ Заявка #{order.id} принята!\n"
         f"Услуга: {data.get('service')}\n"
         f"Описание: {data.get('description')}\n\n"
         f"Мы свяжемся с вами в ближайшее время.",
-        reply_markup=remove_keyboard()
-    )
-
-
-@router.message(OrderStates.confirming, F.text == "❌ Отменить")
-async def order_cancelled(message: Message, state: FSMContext):
-    await state.clear()
-    await message.answer(
-        "Заявка отменена. Напишите /neworder чтобы начать заново.",
-        reply_markup=remove_keyboard()
+        reply_markup=main_menu_keyboard()
     )
