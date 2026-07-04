@@ -1,10 +1,9 @@
 from aiogram import Router, F, Bot
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import Command
 
 from app.states.order_states import OrderStates
-from app.keyboards.order_kb import service_keyboard, confirm_keyboard, remove_keyboard
+from app.keyboards.order_kb import service_keyboard, confirm_keyboard, description_keyboard
 from app.keyboards.user_kb import main_menu_keyboard
 from app.services.order_service import OrderService
 from app.services.notification_service import NotificationService
@@ -27,6 +26,13 @@ SERVICES = [
     "🏠 Другое",
 ]
 
+DESCRIPTION_TEMPLATE = (
+    "Город: \n"
+    "Адрес: \n"
+    "Какая проблема (задача): \n"
+    "Время заявки: "
+)
+
 
 @router.message(F.text == "/neworder")
 async def cmd_neworder(message: Message, state: FSMContext):
@@ -39,7 +45,7 @@ async def cmd_neworder(message: Message, state: FSMContext):
 
 @router.message(OrderStates.choosing_service, F.text == "❌ Отмена")
 @router.message(OrderStates.entering_description, F.text == "❌ Отмена")
-@router.message(OrderStates.confirming, F.text == "❌ Отменить")
+@router.message(OrderStates.confirming, F.text == "❌ Отмена")
 async def cancel_order(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
@@ -54,9 +60,13 @@ async def service_chosen(message: Message, state: FSMContext):
     await state.update_data(service=message.text)
     await state.set_state(OrderStates.entering_description)
     await message.answer(
-        f"Вы выбрали: {message.text}\n\nОпишите проблему подробнее:",
-        reply_markup=ReplyKeyboardRemove()
+        f"Вы выбрали: {message.text}\n\n"
+        f"Опишите проблему подробнее:\n\n"
+        f"Скопируйте шаблон ниже, заполните и отправьте 👇\n"
+        f"Либо напишите администратору @adm_uslugi_andrey",
+        reply_markup=description_keyboard()
     )
+    await message.answer(DESCRIPTION_TEMPLATE)
 
 
 @router.message(OrderStates.entering_description)
@@ -67,8 +77,8 @@ async def description_entered(message: Message, state: FSMContext):
     await state.set_state(OrderStates.confirming)
     await message.answer(
         f"Проверьте заявку:\n\n"
-        f"Услуга: {service}\n"
-        f"Описание: {message.text}\n\n"
+        f"Услуга: {service}\n\n"
+        f"📋 Детали:\n{message.text}\n\n"
         f"Всё верно?",
         reply_markup=confirm_keyboard()
     )
@@ -99,9 +109,9 @@ async def order_confirmed(message: Message, state: FSMContext, db_session, bot: 
 
     await state.clear()
     await message.answer(
-        f"✅ Заявка #{order.id} принята!\n"
-        f"Услуга: {data.get('service')}\n"
-        f"Описание: {data.get('description')}\n\n"
+        f"✅ Заявка #{order.id} принята!\n\n"
+        f"Услуга: {data.get('service')}\n\n"
+        f"📋 Детали:\n{data.get('description')}\n\n"
         f"Мы свяжемся с вами в ближайшее время.",
         reply_markup=main_menu_keyboard()
     )
