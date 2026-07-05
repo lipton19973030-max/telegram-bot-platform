@@ -30,12 +30,6 @@ async def cmd_help(message: Message):
     )
 
 
-@router.message(Command("myorders"))
-@router.message(F.text == "📂 Мои заявки")
-async def cmd_myorders(message: Message):
-    await message.answer("Функция в разработке. Скоро будет доступна!")
-
-
 @router.message(F.text == "📋 Создать заявку")
 async def btn_neworder(message: Message, state: FSMContext):
     await state.set_state(OrderStates.choosing_service)

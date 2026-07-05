@@ -38,5 +38,16 @@ class OrderService:
             return []
         return await self.order_repo.get_by_client(client.id)
 
+    async def get_order_by_id(self, order_id: int):
+        return await self.order_repo.get_by_id(order_id)
+
     async def update_order_status(self, order_id: int, new_status: OrderStatus):
         return await self.order_repo.update_status(order_id, new_status)
+
+    async def cancel_order_by_client(self, order_id: int):
+        order = await self.order_repo.get_by_id(order_id)
+        if not order:
+            return None
+        if order.status in (OrderStatus.new, OrderStatus.in_progress):
+            return await self.order_repo.update_status(order_id, OrderStatus.cancelled)
+        return None
