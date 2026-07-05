@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
@@ -8,6 +8,19 @@ from app.keyboards.order_kb import service_keyboard
 from app.keyboards.user_kb import main_menu_keyboard
 
 router = Router()
+
+
+def support_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="💬 Написать в поддержку",
+                    url="https://t.me/adm_uslugi_andrey"
+                )
+            ]
+        ]
+    )
 
 
 @router.message(CommandStart())
@@ -23,10 +36,8 @@ async def cmd_start(message: Message):
 @router.message(F.text == "❓ Помощь")
 async def cmd_help(message: Message):
     await message.answer(
-        "Доступные команды:\n\n"
-        "📋 Создать заявку — /neworder\n"
-        "📂 Мои заявки — /myorders\n"
-        "❓ Помощь — /help"
+        "Если у вас возникли вопросы или проблемы — напишите нам, мы поможем! 👇",
+        reply_markup=support_keyboard()
     )
 
 
